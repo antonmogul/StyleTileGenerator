@@ -1,8 +1,9 @@
 {
-  "name": "vite-starter",
+  "name": "style-tile-generator",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "A web application for generating style tiles with random colors, typography, and patterns",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -10,5 +11,8 @@
   },
   "devDependencies": {
     "vite": "^5.4.2"
+  },
+  "dependencies": {
+    "html2canvas": "^1.4.1"
   }
 }
