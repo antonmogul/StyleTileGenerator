@@ -15,14 +15,15 @@
     <div class="container">
       <div class="controls">
         <button id="generateBtn" class="control-button">Generate Random Style</button>
+        <button id="generateAIBtn" class="control-button control-button-ai">Generate with AI</button>
         <button id="exportBtn" class="control-button">Export Style Tile</button>
       </div>
       
       <div class="style-tile" id="styleTile">
         <header>
           <div class="logo">
-            <h1>Project Name</h1>
-            <span class="tagline">BRAND TAGLINE</span>
+            <h1 id="projectName">Project Name</h1>
+            <span id="tagline" class="tagline">BRAND TAGLINE</span>
           </div>
           <div class="version">
             <p>Style Tile</p>
@@ -33,19 +34,19 @@
         <main>
           <div class="left-column">
             <div class="typography-section">
-              <h2 class="primary-heading">Primary Heading</h2>
+              <h2 id="primaryHeading" class="primary-heading">Primary Heading</h2>
               <p class="font-note">Font: <span class="primary-font-name">Default</span></p>
               
-              <h3 class="secondary-heading">Secondary Heading</h3>
+              <h3 id="secondaryHeading" class="secondary-heading">Secondary Heading</h3>
               <p class="font-note">Font: <span class="secondary-font-name">Default</span></p>
               
               <div class="body-text">
-                <p>This is an example of body text. It should be easy to read and have good contrast with the background. The line height and letter spacing should be comfortable for longer passages.</p>
+                <p id="bodyText">This is an example of body text. It should be easy to read and have good contrast with the background. The line height and letter spacing should be comfortable for longer passages.</p>
               </div>
               
-              <p class="text-link">This is an example of a Text link »</p>
+              <p id="textLink" class="text-link">This is an example of a Text link »</p>
               
-              <button class="cta-button">Call to Action</button>
+              <button id="ctaButton" class="cta-button">Call to Action</button>
             </div>
           </div>
           
@@ -71,15 +72,29 @@
             </div>
             
             <div class="adjectives">
-              <span class="adjective">Professional</span>
-              <span class="adjective">Modern</span>
-              <span class="adjective">Clean</span>
-              <span class="adjective">Elegant</span>
+              <span class="adjective" id="adjective1">Professional</span>
+              <span class="adjective" id="adjective2">Modern</span>
+              <span class="adjective" id="adjective3">Clean</span>
+              <span class="adjective" id="adjective4">Elegant</span>
             </div>
           </div>
         </main>
       </div>
     </div>
+
+    <!-- AI Prompt Modal -->
+    <div id="aiPromptModal" class="modal">
+      <div class="modal-content">
+        <h2>Describe Your Brand or Design</h2>
+        <p class="modal-description">Describe your brand, its values, target audience, and the feeling you want to convey. The AI will generate a style tile based on your description.</p>
+        <textarea id="aiPrompt" placeholder="Example: A modern, eco-friendly wellness brand targeting young professionals who are interested in sustainable living and mindful practices. The brand should feel fresh, natural, and inspiring."></textarea>
+        <div class="modal-buttons">
+          <button id="cancelAIPrompt" class="control-button">Cancel</button>
+          <button id="submitAIPrompt" class="control-button control-button-ai">Generate Style</button>
+        </div>
+      </div>
+    </div>
+
     <script type="module" src="/main.js"></script>
   </body>
 </html>
