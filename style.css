@@ -29,13 +29,20 @@ body {
 .container {
   max-width: 1200px;
   margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .controls {
-  margin-bottom: 2rem;
+  margin: 2rem 0;
   display: flex;
   gap: 1rem;
   justify-content: center;
+  padding: 1rem;
+  background-color: var(--background-color);
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .control-button {
