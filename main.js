@@ -51,8 +51,8 @@ submitAIPrompt.addEventListener('click', async () => {
     modal.classList.remove('active');
     aiPromptInput.value = '';
   } catch (error) {
-    console.error('Error generating AI style:', error);
-    alert('There was an error generating the style. Please try again.');
+    console.error('Error in AI generation:', error);
+    alert(error.message || 'There was an error generating the style. Please check the console for details.');
   } finally {
     submitAIPrompt.disabled = false;
     submitAIPrompt.textContent = 'Generate Style';
@@ -61,58 +61,133 @@ submitAIPrompt.addEventListener('click', async () => {
 
 // Function to call AI API
 async function generateAIStyle(prompt) {
-  // Replace this with your actual API endpoint and key
-  const API_ENDPOINT = 'YOUR_API_ENDPOINT';
-  const API_KEY = 'YOUR_API_KEY';
+  const OPENAI_API_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
+  const API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+
+  if (!API_KEY) {
+    throw new Error('OpenAI API key not found. Please add it to your .env file.');
+  }
+
+  const systemPrompt = `You are a professional design system generator. Your task is to create a cohesive style tile based on brand descriptions. 
+  You must output valid JSON that matches this exact structure, with HSL colors and only using the available fonts.
+  
+  Rules for generation:
+  1. Colors should be harmonious and reflect the brand's personality
+  2. Typography choices should be readable and match the brand's tone
+  3. Content should be realistic and match the brand's voice
+  4. Adjectives should capture the brand's key attributes`;
+
+  const userPrompt = `Generate a style tile design for the following brand description: ${prompt}
+
+  Available fonts: ${fonts.map(f => f.name).join(', ')}
+
+  Respond only with valid JSON in this exact structure:
+  {
+    "colors": {
+      "primary": "hsl(H, S%, L%)",
+      "secondary": "hsl(H, S%, L%)",
+      "accent": "hsl(H, S%, L%)",
+      "text": "hsl(H, S%, L%)",
+      "background": "hsl(H, S%, L%)"
+    },
+    "typography": {
+      "headingFont": "font name from available fonts",
+      "bodyFont": "font name from available fonts"
+    },
+    "content": {
+      "projectName": "brand name",
+      "tagline": "brand tagline in caps",
+      "primaryHeading": "compelling heading",
+      "secondaryHeading": "supporting subheading",
+      "bodyText": "2-3 sentence paragraph about the brand",
+      "ctaText": "action-oriented button text",
+      "linkText": "engaging link text with »"
+    },
+    "adjectives": ["word1", "word2", "word3", "word4"]
+  }`;
 
   try {
-    const response = await fetch(API_ENDPOINT, {
+    console.log('Sending request to OpenAI...');
+    const response = await fetch(OPENAI_API_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${API_KEY}`
       },
       body: JSON.stringify({
-        prompt: `Generate a style tile design for the following brand description: ${prompt}
-        
-        Please provide a JSON response with the following structure:
-        {
-          "colors": {
-            "primary": "color in HSL format",
-            "secondary": "color in HSL format",
-            "accent": "color in HSL format",
-            "text": "color in HSL format",
-            "background": "color in HSL format"
+        model: 'gpt-4',
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
           },
-          "typography": {
-            "headingFont": "font name from available fonts",
-            "bodyFont": "font name from available fonts"
-          },
-          "content": {
-            "projectName": "brand name",
-            "tagline": "brand tagline",
-            "primaryHeading": "sample heading",
-            "secondaryHeading": "sample subheading",
-            "bodyText": "sample paragraph",
-            "ctaText": "call to action text",
-            "linkText": "sample link text"
-          },
-          "adjectives": ["word1", "word2", "word3", "word4"]
-        }
-        
-        Available fonts: ${fonts.map(f => f.name).join(', ')}`
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ],
+        temperature: 0.7,
+        max_tokens: 1000
       })
     });
 
     if (!response.ok) {
-      throw new Error('API request failed');
+      const error = await response.json();
+      console.error('API Error:', error);
+      throw new Error(error.error?.message || 'API request failed');
     }
 
     const data = await response.json();
-    return data;
+    console.log('OpenAI Response:', data);
+
+    // The response is already JSON, no need to parse
+    const styleData = JSON.parse(data.choices[0].message.content);
+    console.log('Parsed Style Data:', styleData);
+
+    // Validate the response structure
+    const requiredKeys = {
+      colors: ['primary', 'secondary', 'accent', 'text', 'background'],
+      typography: ['headingFont', 'bodyFont'],
+      content: ['projectName', 'tagline', 'primaryHeading', 'secondaryHeading', 'bodyText', 'ctaText', 'linkText'],
+      adjectives: null
+    };
+
+    for (const [section, keys] of Object.entries(requiredKeys)) {
+      if (!styleData[section]) {
+        throw new Error(`Missing ${section} section in AI response`);
+      }
+      if (keys) {
+        for (const key of keys) {
+          if (!styleData[section][key]) {
+            throw new Error(`Missing ${section}.${key} in AI response`);
+          }
+        }
+      }
+    }
+
+    if (!Array.isArray(styleData.adjectives) || styleData.adjectives.length !== 4) {
+      throw new Error('Invalid adjectives array in AI response');
+    }
+
+    // Validate fonts
+    const availableFonts = fonts.map(f => f.name);
+    if (!availableFonts.includes(styleData.typography.headingFont) || 
+        !availableFonts.includes(styleData.typography.bodyFont)) {
+      throw new Error('Invalid font selection in AI response');
+    }
+
+    // Validate HSL colors
+    const hslRegex = /^hsl\(\d{1,3},\s*\d{1,3}%,\s*\d{1,3}%\)$/;
+    for (const [key, value] of Object.entries(styleData.colors)) {
+      if (!hslRegex.test(value)) {
+        throw new Error(`Invalid HSL color format for ${key}: ${value}`);
+      }
+    }
+
+    return styleData;
   } catch (error) {
-    console.error('Error calling AI API:', error);
-    throw error;
+    console.error('Error in generateAIStyle:', error);
+    throw new Error('Failed to generate style. Please check the console for details.');
   }
 }
 
